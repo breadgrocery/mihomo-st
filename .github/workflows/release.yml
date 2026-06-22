@@ -3,7 +3,7 @@ name: release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -53,7 +53,7 @@ jobs:
       - name: Build
         shell: pwsh
         env:
-          CGO_ENABLED: '0'
+          CGO_ENABLED: "0"
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           go build -v -tags with_gvisor -trimpath -ldflags '-extldflags -static -w -s -buildid=' -o 'dist/${{ matrix.output }}' ./cmd/mihomo-st
@@ -118,4 +118,11 @@ jobs:
           clean: true
           force: true
           single-commit: true
-          commit-message: 'ci: update release'
+          commit-message: "ci: update release"
+
+      - name: Purge jsdelivr CDN
+        run: |
+          cd release-assets
+          for file in *; do
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+          done
