@@ -8,6 +8,7 @@ import (
 
 type APIConfig struct {
 	DefaultTimeout int            `json:"default-timeout"`
+	SkipCertVerify bool           `json:"skip-cert-verify"`
 	ProxyServer    APIProxyServer `json:"proxy-server"`
 	Delay          APIDelay       `json:"delay"`
 	Download       APIDownload    `json:"download"`
@@ -63,6 +64,7 @@ func ToAPI(cfg Config) APIConfig {
 	cfg = cfg.Clone()
 	return APIConfig{
 		DefaultTimeout: cfg.DefaultTimeout,
+		SkipCertVerify: cfg.SkipCertVerify,
 		ProxyServer: APIProxyServer{
 			Expand:      cfg.ProxyServer.Expand,
 			Nameservers: cloneStrings(cfg.ProxyServer.Nameservers),

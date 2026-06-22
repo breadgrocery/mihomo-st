@@ -2,16 +2,20 @@ package httpclient
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	C "github.com/metacubex/mihomo/constant"
 )
 
 const DefaultUserAgent = "clash.meta"
+
+var skipCertVerify atomic.Bool
 
 type Options struct {
 	Timeout          time.Duration
@@ -20,11 +24,16 @@ type Options struct {
 	DisableRedirects bool
 }
 
+func SetSkipCertVerify(enabled bool) {
+	skipCertVerify.Store(enabled)
+}
+
 func New(opts Options) *http.Client {
 	transport := opts.Transport
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
+	transport = transportWithGlobalTLSConfig(transport)
 	client := &http.Client{
 		Timeout: opts.Timeout,
 		Transport: headerTransport{
@@ -58,6 +67,7 @@ func NewProxyTransport(proxy C.Proxy) http.RoundTripper {
 		DisableKeepAlives:     true,
 		IdleConnTimeout:       10 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
+		TLSClientConfig:       globalTLSConfig(),
 		ExpectContinueTimeout: time.Second,
 	}
 }
@@ -129,4 +139,32 @@ func hasHeader(header http.Header, name string) bool {
 		}
 	}
 	return false
+}
+
+func transportWithGlobalTLSConfig(base http.RoundTripper) http.RoundTripper {
+	if !skipCertVerify.Load() {
+		return base
+	}
+	transport, ok := base.(*http.Transport)
+	if !ok {
+		return base
+	}
+	clone := transport.Clone()
+	clone.TLSClientConfig = cloneTLSConfig(clone.TLSClientConfig)
+	clone.TLSClientConfig.InsecureSkipVerify = true
+	return clone
+}
+
+func globalTLSConfig() *tls.Config {
+	if !skipCertVerify.Load() {
+		return nil
+	}
+	return &tls.Config{InsecureSkipVerify: true}
+}
+
+func cloneTLSConfig(cfg *tls.Config) *tls.Config {
+	if cfg == nil {
+		return &tls.Config{}
+	}
+	return cfg.Clone()
 }

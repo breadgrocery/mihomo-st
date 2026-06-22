@@ -97,13 +97,15 @@ func New(initialConfig config.Config, initialProxies ...[]*proxyconfig.Record) (
 	if err != nil {
 		return nil, err
 	}
-	return &Runtime{
+	runtime := &Runtime{
 		proxies:       store.New(records),
 		config:        configStore,
 		tester:        &tester.Tester{},
 		expandCache:   &proxyconfig.ServerExpandCache{},
 		executableDir: executableDir,
-	}, nil
+	}
+	httpclient.SetSkipCertVerify(initialConfig.SkipCertVerify)
+	return runtime, nil
 }
 
 func defaultExecutableDir() (string, error) {
@@ -123,7 +125,12 @@ func (r *Runtime) Config() config.Config {
 }
 
 func (r *Runtime) PatchConfig(values map[string]json.RawMessage) (config.Config, error) {
-	return r.config.PatchAPI(values)
+	next, err := r.config.PatchAPI(values)
+	if err != nil {
+		return config.Config{}, err
+	}
+	httpclient.SetSkipCertVerify(next.SkipCertVerify)
+	return next, nil
 }
 
 func (r *Runtime) ListProxies() (ProxyListResult, error) {

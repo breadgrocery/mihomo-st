@@ -87,6 +87,7 @@ Default config:
 ```json
 {
   "default-timeout": 5000,
+  "skip-cert-verify": false,
   "proxy-server": {
     "expand": false,
     "nameservers": ["system"],
@@ -117,6 +118,11 @@ Default config:
 failure. Omitted fields leave existing values unchanged. Explicit `0` or
 negative values for positive config fields return `400`. Changing config does
 not rebuild the proxy snapshot.
+
+`skip-cert-verify` is a global boolean and defaults to `false`. When it is
+`true`, HTTP clients constructed after the config change skip TLS certificate
+verification. It applies to shared HTTP client usage such as remote imports,
+one-shot proxy requests, delay tests, and download tests.
 
 `delay` and `download` support shared HTTP fields at the root:
 `headers`, `timeout`, and `follow-redirect`. `headers` is an object of string

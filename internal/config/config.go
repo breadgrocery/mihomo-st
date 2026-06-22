@@ -32,6 +32,7 @@ const (
 
 type Config struct {
 	DefaultTimeout int         `config:"default-timeout" validate:"gt=0"`
+	SkipCertVerify bool        `config:"skip-cert-verify"`
 	ProxyServer    ProxyServer `config:"proxy-server"`
 	Delay          Delay       `config:"delay"`
 	Download       Download    `config:"download"`

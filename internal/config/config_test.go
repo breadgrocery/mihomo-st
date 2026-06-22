@@ -16,6 +16,9 @@ func TestDefaultConfigMatchesDocumentedRuntimeShape(t *testing.T) {
 	if cfg.DefaultTimeout != 5000 {
 		t.Fatalf("default-timeout = %d", cfg.DefaultTimeout)
 	}
+	if cfg.SkipCertVerify {
+		t.Fatal("skip-cert-verify default should be false")
+	}
 	if cfg.ProxyServer.Expand || cfg.ProxyServer.Timeout != 5000 || !reflect.DeepEqual(cfg.ProxyServer.Nameservers, []string{"system"}) {
 		t.Fatalf("proxy-server defaults = %+v", cfg.ProxyServer)
 	}
@@ -83,7 +86,7 @@ func TestToAPIUsesKebabCaseAndPreservesFalseValues(t *testing.T) {
 	cfg.Download.FollowRedirect = false
 
 	raw := marshalAPIToMap(t, cfg)
-	for _, key := range []string{"default-timeout", "proxy-server", "delay", "download"} {
+	for _, key := range []string{"default-timeout", "skip-cert-verify", "proxy-server", "delay", "download"} {
 		if _, ok := raw[key]; !ok {
 			t.Fatalf("missing API key %q in %+v", key, raw)
 		}
@@ -134,10 +137,11 @@ func TestAPIMappingCopiesNestedURLPointersAndMaps(t *testing.T) {
 func TestPatchAPIDeepMergesObjectsReplacesArraysAndStoresOnlyValidConfig(t *testing.T) {
 	store := newDefaultStore(t)
 	first, err := store.PatchAPI(rawPatch(map[string]string{
-		"delay":           `{"headers":{"X-Root":"delay"},"urls":["https://delay.example/one"],"rounds":3}`,
-		"download":        `{"headers":{"X-Root":"download"},"concurrency":2}`,
-		"proxy-server":    `{"expand":true}`,
-		"default-timeout": `7000`,
+		"delay":            `{"headers":{"X-Root":"delay"},"urls":["https://delay.example/one"],"rounds":3}`,
+		"download":         `{"headers":{"X-Root":"download"},"concurrency":2}`,
+		"proxy-server":     `{"expand":true}`,
+		"default-timeout":  `7000`,
+		"skip-cert-verify": `true`,
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -151,7 +155,8 @@ func TestPatchAPIDeepMergesObjectsReplacesArraysAndStoresOnlyValidConfig(t *test
 		len(first.Delay.URLs) != 1 ||
 		first.Delay.URLs[0].URL != "https://delay.example/one" ||
 		first.Download.Headers["X-Root"] != "download" ||
-		first.Download.Concurrency != 2 {
+		first.Download.Concurrency != 2 ||
+		!first.SkipCertVerify {
 		t.Fatalf("patched config = %+v", first)
 	}
 

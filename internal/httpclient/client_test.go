@@ -105,6 +105,41 @@ func TestNewRedirectPolicyDefaultsToFollowAndCanBeDisabled(t *testing.T) {
 	}
 }
 
+func TestGlobalSkipCertVerifyAppliesToHTTPTransports(t *testing.T) {
+	SetSkipCertVerify(true)
+	t.Cleanup(func() { SetSkipCertVerify(false) })
+
+	defaultClient := New(Options{})
+	defaultTransport, ok := defaultClient.Transport.(headerTransport).base.(*http.Transport)
+	if !ok {
+		t.Fatalf("default base transport = %T", defaultClient.Transport.(headerTransport).base)
+	}
+	if defaultTransport == http.DefaultTransport {
+		t.Fatal("default transport was not cloned before applying TLS config")
+	}
+	if defaultTransport.TLSClientConfig == nil || !defaultTransport.TLSClientConfig.InsecureSkipVerify {
+		t.Fatalf("default transport TLS config = %+v", defaultTransport.TLSClientConfig)
+	}
+
+	customBase := &http.Transport{}
+	customClient := New(Options{Transport: customBase})
+	customTransport, ok := customClient.Transport.(headerTransport).base.(*http.Transport)
+	if !ok {
+		t.Fatalf("custom base transport = %T", customClient.Transport.(headerTransport).base)
+	}
+	if customTransport == customBase {
+		t.Fatal("custom transport was not cloned before applying TLS config")
+	}
+	if customTransport.TLSClientConfig == nil || !customTransport.TLSClientConfig.InsecureSkipVerify {
+		t.Fatalf("custom transport TLS config = %+v", customTransport.TLSClientConfig)
+	}
+
+	proxyTransport := NewProxyTransport(&dialCaptureProxy{}).(*http.Transport)
+	if proxyTransport.TLSClientConfig == nil || !proxyTransport.TLSClientConfig.InsecureSkipVerify {
+		t.Fatalf("proxy transport TLS config = %+v", proxyTransport.TLSClientConfig)
+	}
+}
+
 func TestMergeHeadersAppliesCaseInsensitiveLayerPrecedence(t *testing.T) {
 	low := map[string]string{"User-Agent": "low-agent", "X-Test": "low", "X-Keep": "keep"}
 	mid := map[string]string{"x-test": "mid"}

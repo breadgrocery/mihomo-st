@@ -20,6 +20,7 @@ import (
 	"github.com/metacubex/mihomo/common/utils"
 	C "github.com/metacubex/mihomo/constant"
 	"mihomo-st/internal/config"
+	"mihomo-st/internal/httpclient"
 	"mihomo-st/internal/proxyconfig"
 )
 
@@ -68,6 +69,57 @@ func TestRuntimeConfigPatchIsRuntimeOnlyAndLeavesProxySnapshotAlone(t *testing.T
 	}
 	if after.Version != before.Version || len(after.Proxies) != len(before.Proxies) {
 		t.Fatalf("config patch changed proxy snapshot: before=%+v after=%+v", before, after)
+	}
+}
+
+func TestRuntimeConfigPatchUpdatesSkipCertVerifyForFutureHTTPClients(t *testing.T) {
+	httpclient.SetSkipCertVerify(false)
+	t.Cleanup(func() { httpclient.SetSkipCertVerify(false) })
+
+	remote := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(proxyYAML("tls", "tls.example")))
+	}))
+	defer remote.Close()
+
+	rt := makeRuntime(t, config.Default(), nil)
+	_, err := rt.ImportProxies(context.Background(), ProxyImportCommand{
+		Type:    SourceRemote,
+		Payload: remote.URL,
+		Timeout: intPtr(1000),
+	})
+	if err == nil {
+		t.Fatal("self-signed remote import succeeded before skip-cert-verify was enabled")
+	}
+
+	if _, err := rt.PatchConfig(map[string]json.RawMessage{
+		"skip-cert-verify": json.RawMessage(`true`),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	imported, err := rt.ImportProxies(context.Background(), ProxyImportCommand{
+		Type:    SourceRemote,
+		Payload: remote.URL,
+		Timeout: intPtr(1000),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(imported.Proxies) != 1 || imported.Proxies[0].Name != "tls" {
+		t.Fatalf("skip-cert-verify import = %+v", imported)
+	}
+
+	if _, err := rt.PatchConfig(map[string]json.RawMessage{
+		"skip-cert-verify": json.RawMessage(`false`),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	_, err = rt.ImportProxies(context.Background(), ProxyImportCommand{
+		Type:    SourceRemote,
+		Payload: remote.URL,
+		Timeout: intPtr(1000),
+	})
+	if err == nil {
+		t.Fatal("self-signed remote import succeeded after skip-cert-verify was disabled")
 	}
 }
 

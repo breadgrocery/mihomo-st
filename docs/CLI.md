@@ -31,6 +31,9 @@ The process always starts with built-in default runtime config. Change runtime
 config through the REST API `PATCH /config`; import proxy nodes through
 `POST /proxies/import`.
 
+The global runtime config field `skip-cert-verify` defaults to `false`. Patch it
+to `true` only when later HTTP clients should skip TLS certificate verification.
+
 Collection test requests can override runtime concurrency with positive
 request-level `concurrency`. Omitted request `concurrency` falls back to runtime
 config. Explicit `0` or negative request values return `400`. Single-proxy test

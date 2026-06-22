@@ -76,6 +76,9 @@ func TestConfigEndpointDefaultsPatchSemanticsAndValidation(t *testing.T) {
 	api := newServerHarness(t)
 
 	defaults := api.jsonObject(http.MethodGet, "/config", "", http.StatusOK)
+	if defaults["skip-cert-verify"] != false {
+		t.Fatalf("skip-cert-verify default = %+v", defaults["skip-cert-verify"])
+	}
 	delay := objectField(t, defaults, "delay")
 	if delay["timeout"] != float64(config.DefaultDelayTimeout) ||
 		delay["concurrency"] != float64(config.DefaultDelayConcurrency) ||
@@ -95,8 +98,12 @@ func TestConfigEndpointDefaultsPatchSemanticsAndValidation(t *testing.T) {
 				{"url": "https://two.example/generate_204", "rounds": 3}
 			]
 		},
-		"download": {"concurrency": 2}
+		"download": {"concurrency": 2},
+		"skip-cert-verify": true
 	}`, http.StatusOK)
+	if patched["skip-cert-verify"] != true {
+		t.Fatalf("skip-cert-verify patch = %+v", patched["skip-cert-verify"])
+	}
 	delay = objectField(t, patched, "delay")
 	if delay["timeout"] != float64(config.DefaultDelayTimeout) {
 		t.Fatalf("patch should deep-merge delay timeout, got %+v", delay)
