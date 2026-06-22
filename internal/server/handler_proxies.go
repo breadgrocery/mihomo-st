@@ -33,3 +33,12 @@ func (s *Server) handleProxies(w http.ResponseWriter, r *http.Request) {
 		writeMethodNotAllowed(w)
 	}
 }
+
+func (s *Server) handleProxyExport(w http.ResponseWriter, r *http.Request) {
+	result, err := s.app.ExportProxies()
+	if err != nil {
+		writeAppError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, proxyExportResponseFromResult(result))
+}

@@ -29,7 +29,7 @@ mihomo-st -l 127.0.0.1:32198
 
 The process always starts with built-in default runtime config. Change runtime
 config through the REST API `PATCH /config`; import proxy nodes through
-`POST /proxies`.
+`POST /proxies/import`.
 
 Collection test requests can override runtime concurrency with positive
 request-level `concurrency`. Omitted request `concurrency` falls back to runtime

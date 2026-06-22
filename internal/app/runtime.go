@@ -51,6 +51,10 @@ type ProxyListResult struct {
 	Proxies []store.ProxyInfo
 }
 
+type ProxyExportResult struct {
+	Proxies []map[string]any
+}
+
 type DelayResult struct {
 	Version int
 	Digest  string
@@ -129,6 +133,20 @@ func (r *Runtime) ListProxies() (ProxyListResult, error) {
 		Version: ref.Version(),
 		Proxies: ref.List(),
 	}, nil
+}
+
+func (r *Runtime) ExportProxies() (ProxyExportResult, error) {
+	ref := r.proxies.Current()
+	defer ref.Release()
+
+	records := ref.Records()
+	proxies := make([]map[string]any, len(records))
+	for idx, record := range records {
+		proxy := cloneProxyMapping(record.Raw)
+		proxy["metadata"] = proxyExportMetadata(proxy["metadata"], record.Digest)
+		proxies[idx] = proxy
+	}
+	return ProxyExportResult{Proxies: proxies}, nil
 }
 
 func (r *Runtime) ImportProxies(ctx context.Context, cmd ProxyImportCommand) (ProxyImportResult, error) {
@@ -470,4 +488,36 @@ func closeRecords(records []*proxyconfig.Record) {
 		}
 		_ = record.Proxy.Close()
 	}
+}
+
+func cloneProxyMapping(mapping map[string]any) map[string]any {
+	clone := make(map[string]any, len(mapping))
+	for key, value := range mapping {
+		clone[key] = cloneProxyValue(value)
+	}
+	return clone
+}
+
+func cloneProxyValue(value any) any {
+	switch v := value.(type) {
+	case map[string]any:
+		return cloneProxyMapping(v)
+	case []any:
+		clone := make([]any, len(v))
+		for idx, item := range v {
+			clone[idx] = cloneProxyValue(item)
+		}
+		return clone
+	default:
+		return value
+	}
+}
+
+func proxyExportMetadata(existing any, digest string) map[string]any {
+	metadata := make(map[string]any)
+	if existingMetadata, ok := existing.(map[string]any); ok {
+		metadata = cloneProxyMapping(existingMetadata)
+	}
+	metadata["digest"] = digest
+	return metadata
 }

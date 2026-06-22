@@ -131,7 +131,7 @@ func TestConfigEndpointDefaultsPatchSemanticsAndValidation(t *testing.T) {
 func TestProxyImportListAndRemoteHTTPOptions(t *testing.T) {
 	api := newServerHarness(t)
 
-	firstImport := api.jsonObject(http.MethodPost, "/proxies", `{
+	firstImport := api.jsonObject(http.MethodPost, "/proxies/import", `{
 		"type": "text",
 		"payload": `+jsonText(proxyYAML("alpha", "alpha.example"))+`,
 		"headers": {"Authorization": "ignored"}
@@ -147,7 +147,7 @@ func TestProxyImportListAndRemoteHTTPOptions(t *testing.T) {
 		t.Fatalf("unexpected warnings = %+v", warnings)
 	}
 
-	secondImport := api.jsonObject(http.MethodPost, "/proxies", `{
+	secondImport := api.jsonObject(http.MethodPost, "/proxies/import", `{
 		"type": "text",
 		"mode": "append",
 		"payload": `+jsonText(proxyYAML("beta", "beta.example"))+`
@@ -160,7 +160,7 @@ func TestProxyImportListAndRemoteHTTPOptions(t *testing.T) {
 		t.Fatalf("list response = %+v", list)
 	}
 
-	warned := api.jsonObject(http.MethodPost, "/proxies", `{
+	warned := api.jsonObject(http.MethodPost, "/proxies/import", `{
 		"type": "text",
 		"payload": `+jsonText("proxies:\n  - name: incomplete\n    type: ss\n  - "+strings.TrimPrefix(proxyYAML("kept", "kept.example"), "proxies:\n  - "))+`
 	}`, http.StatusOK)
@@ -179,7 +179,7 @@ func TestProxyImportListAndRemoteHTTPOptions(t *testing.T) {
 	}))
 	defer redirector.Close()
 
-	remote := api.jsonObject(http.MethodPost, "/proxies", `{
+	remote := api.jsonObject(http.MethodPost, "/proxies/import", `{
 		"type": "remote",
 		"payload": `+jsonText(redirector.URL)+`,
 		"headers": {"Authorization": "Bearer token", "User-Agent": "contract-test"},
@@ -193,15 +193,51 @@ func TestProxyImportListAndRemoteHTTPOptions(t *testing.T) {
 		t.Fatalf("remote headers = %+v", headers)
 	}
 
-	api.errorObject(http.MethodPost, "/proxies", `{
+	api.errorObject(http.MethodPost, "/proxies/import", `{
 		"type": "remote",
 		"payload": `+jsonText(redirector.URL)+`,
 		"timeout": 1000,
 		"follow-redirect": false
 	}`, http.StatusBadGateway, "BAD_GATEWAY", "302")
-	api.errorObject(http.MethodPost, "/proxies", `{"type":"remote","payload":"ftp://example.test/list.yaml"}`, http.StatusBadRequest, "BAD_REQUEST", "remote source URL")
-	api.errorObject(http.MethodPost, "/proxies", `{"type":"text"}`, http.StatusBadRequest, "BAD_REQUEST", "payload is required")
+	api.errorObject(http.MethodPost, "/proxies/import", `{"type":"remote","payload":"ftp://example.test/list.yaml"}`, http.StatusBadRequest, "BAD_REQUEST", "remote source URL")
+	api.errorObject(http.MethodPost, "/proxies/import", `{"type":"text"}`, http.StatusBadRequest, "BAD_REQUEST", "payload is required")
+	api.errorObject(http.MethodPost, "/proxies", `{}`, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 	api.errorObject(http.MethodPut, "/proxies", `{}`, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+}
+
+func TestProxyExportReturnsCurrentSnapshotRawNodeData(t *testing.T) {
+	api := newServerHarness(t)
+	api.jsonObject(http.MethodPost, "/proxies/import", `{
+		"type": "text",
+		"payload": `+jsonText(proxyYAML("alpha", "alpha.example")+"    udp: true\n    custom-field: keep\n    metadata:\n      source: imported\n      digest: stale\n")+`
+	}`, http.StatusOK)
+
+	exported := api.jsonObject(http.MethodGet, "/proxies/export", "", http.StatusOK)
+	if _, ok := exported["version"]; ok {
+		t.Fatalf("export response must not include version: %+v", exported)
+	}
+	proxies := arrayField(t, exported, "proxies")
+	if len(proxies) != 1 {
+		t.Fatalf("exported proxies = %+v", proxies)
+	}
+	proxy := objectField(t, proxies[0], "")
+	if _, ok := proxy["digest"]; ok {
+		t.Fatalf("exported proxy must not include top-level digest: %+v", proxy)
+	}
+	metadata := objectField(t, proxy, "metadata")
+	if metadata["digest"] == "" || metadata["digest"] == "stale" || metadata["source"] != "imported" {
+		t.Fatalf("exported metadata = %+v", metadata)
+	}
+	if proxy["name"] != "alpha" ||
+		proxy["type"] != "ss" ||
+		proxy["server"] != "alpha.example" ||
+		proxy["port"] != float64(8388) ||
+		proxy["cipher"] != "aes-128-gcm" ||
+		proxy["password"] != "secret" ||
+		proxy["udp"] != true ||
+		proxy["custom-field"] != "keep" {
+		t.Fatalf("exported proxy = %+v", proxy)
+	}
 }
 
 func TestProxyHTTPRequestEndpointStreamsRawUpstreamResponses(t *testing.T) {
@@ -385,7 +421,7 @@ func TestStrictJSONDecoderRejectsUnknownNullMalformedAndExtraValues(t *testing.T
 		body     string
 		contains string
 	}{
-		{name: "unknown import field", method: http.MethodPost, path: "/proxies", body: `{"type":"text","payload":"proxies: []","legacy":true}`, contains: "unknown field"},
+		{name: "unknown import field", method: http.MethodPost, path: "/proxies/import", body: `{"type":"text","payload":"proxies: []","legacy":true}`, contains: "unknown field"},
 		{name: "nested null", method: http.MethodPost, path: "/proxies/direct/download", body: `{"urls":[{"url":"https://example.test/file","max-bytes":null}]}`, contains: "cannot be null"},
 		{name: "malformed json", method: http.MethodPost, path: "/proxies/direct/proxy", body: `{"url":`, contains: "unexpected EOF"},
 		{name: "extra json value", method: http.MethodPost, path: "/digest", body: `{"type":"direct"} {}`, contains: "only one JSON value"},

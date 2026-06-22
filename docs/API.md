@@ -134,7 +134,7 @@ overrides to use fallback values; explicit `0` or negative values are invalid.
 ### Import
 
 ```http
-POST /proxies
+POST /proxies/import
 Content-Type: application/json
 ```
 
@@ -241,6 +241,36 @@ GET /proxies
 ```
 
 `GET /proxies` never expands or mutates inventory.
+
+### Export
+
+```http
+GET /proxies/export
+```
+
+```json
+{
+  "proxies": [
+    {
+      "type": "ss",
+      "name": "node-a",
+      "server": "1.2.3.4",
+      "port": 8388,
+      "cipher": "aes-128-gcm",
+      "password": "secret",
+      "metadata": {
+        "digest": "canonical_endpoint"
+      }
+    }
+  ]
+}
+```
+
+`GET /proxies/export` returns the current snapshot as proxy node objects. Each
+item contains the original node fields at the top level and a `metadata` object
+with the generated `digest`. Existing `metadata` object fields are preserved,
+with the generated `digest` taking precedence over any existing `metadata.digest`.
+It never expands or mutates inventory.
 
 ### One-shot proxy request
 

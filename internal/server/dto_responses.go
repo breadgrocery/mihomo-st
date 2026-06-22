@@ -29,6 +29,10 @@ type proxyListResponseDTO struct {
 	Proxies []proxyInfoResponseDTO `json:"proxies"`
 }
 
+type proxyExportResponseDTO struct {
+	Proxies []map[string]any `json:"proxies"`
+}
+
 type importProxiesResponseDTO struct {
 	Version  int                    `json:"version"`
 	Proxies  []proxyInfoResponseDTO `json:"proxies"`
@@ -112,6 +116,10 @@ func proxyListResponseFromResult(result app.ProxyListResult) proxyListResponseDT
 		Version: result.Version,
 		Proxies: proxyInfoResponses(result.Proxies),
 	}
+}
+
+func proxyExportResponseFromResult(result app.ProxyExportResult) proxyExportResponseDTO {
+	return proxyExportResponseDTO{Proxies: result.Proxies}
 }
 
 func importProxiesResponseFromResult(result app.ProxyImportResult) importProxiesResponseDTO {
