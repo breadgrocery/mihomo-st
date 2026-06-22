@@ -25,16 +25,16 @@ func TestDefaultConfigMatchesDocumentedRuntimeShape(t *testing.T) {
 		!cfg.Delay.FollowRedirect ||
 		cfg.Delay.Expected != "200-299" ||
 		cfg.Delay.Rounds != 2 ||
-		cfg.Delay.Concurrency != 10 ||
+		cfg.Delay.Concurrency != 100 ||
 		!cfg.Delay.Unified {
 		t.Fatalf("delay defaults = %+v", cfg.Delay)
 	}
 	if len(cfg.Download.URLs) != 1 ||
 		cfg.Download.URLs[0].URL != "https://cachefly.cachefly.net/50mb.test" ||
-		cfg.Download.Timeout != 15000 ||
+		cfg.Download.Timeout != 10000 ||
 		!cfg.Download.FollowRedirect ||
 		cfg.Download.Rounds != 1 ||
-		cfg.Download.MaxBytes != 50*1024*1024 ||
+		cfg.Download.MaxBytes != 100*1024*1024 ||
 		cfg.Download.Concurrency != 1 {
 		t.Fatalf("download defaults = %+v", cfg.Download)
 	}

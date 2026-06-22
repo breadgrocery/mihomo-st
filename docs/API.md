@@ -98,15 +98,15 @@ Default config:
     "follow-redirect": true,
     "expected": "200-299",
     "rounds": 2,
-    "concurrency": 10,
+    "concurrency": 100,
     "unified": true
   },
   "download": {
     "urls": [{ "url": "https://cachefly.cachefly.net/50mb.test" }],
-    "timeout": 15000,
+    "timeout": 10000,
     "follow-redirect": true,
     "rounds": 1,
-    "max-bytes": 52428800,
+    "max-bytes": 104857600,
     "concurrency": 1
   }
 }
@@ -295,7 +295,7 @@ Collection tests always test every proxy in the current snapshot. Empty
 collection tests return the snapshot version and an empty `results` array.
 Collection requests accept optional `concurrency`. Positive values are used as
 the node concurrency limit for that request. Omitted `concurrency` falls back to
-runtime config: `delay.concurrency` defaults to `10`, and
+runtime config: `delay.concurrency` defaults to `100`, and
 `download.concurrency` defaults to `1`. Explicit `0` or negative `concurrency`
 returns `400`.
 Single-proxy test requests do not accept `concurrency`; strict JSON decoding
@@ -336,10 +336,10 @@ Collection download request:
   "headers": {
     "Range": "bytes=0-1048575"
   },
-  "timeout": 15000,
+  "timeout": 10000,
   "follow-redirect": true,
   "rounds": 1,
-  "max-bytes": 52428800,
+  "max-bytes": 104857600,
   "urls": [
     "https://cachefly.cachefly.net/50mb.test",
     {

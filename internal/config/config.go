@@ -21,12 +21,12 @@ const (
 	DefaultDelayTimeout          = 10000
 	DefaultDelayExpected         = "200-299"
 	DefaultDelayRounds           = 2
-	DefaultDelayConcurrency      = 10
+	DefaultDelayConcurrency      = 100
 	DefaultDelayUnified          = true
 	DefaultDownloadURL           = "https://cachefly.cachefly.net/50mb.test"
-	DefaultDownloadTimeout       = 15000
+	DefaultDownloadTimeout       = 10000
 	DefaultDownloadRounds        = 1
-	DefaultDownloadMaxBytes      = 50 * 1024 * 1024
+	DefaultDownloadMaxBytes      = 100 * 1024 * 1024
 	DefaultDownloadConcurrency   = 1
 )
 
