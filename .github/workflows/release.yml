@@ -23,16 +23,22 @@ jobs:
         include:
           - runner: windows-2025
             output: mihomo-st-windows-amd64.exe
+            archive: mihomo-st-windows-amd64.zip
           - runner: windows-11-arm
             output: mihomo-st-windows-arm64.exe
+            archive: mihomo-st-windows-arm64.zip
           - runner: ubuntu-24.04
             output: mihomo-st-linux-amd64
+            archive: mihomo-st-linux-amd64.tar.gz
           - runner: ubuntu-24.04-arm
             output: mihomo-st-linux-arm64
+            archive: mihomo-st-linux-arm64.tar.gz
           - runner: macos-15-intel
             output: mihomo-st-darwin-amd64
+            archive: mihomo-st-darwin-amd64.tar.gz
           - runner: macos-15
             output: mihomo-st-darwin-arm64
+            archive: mihomo-st-darwin-arm64.tar.gz
 
     steps:
       - name: Checkout
@@ -50,11 +56,22 @@ jobs:
           CGO_ENABLED: '0'
         run: New-Item -ItemType Directory -Force -Path dist | Out-Null; go build -trimpath -ldflags '-s -w' -o 'dist/${{ matrix.output }}' ./cmd/mihomo-st
 
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          $archive = 'release-assets/${{ matrix.archive }}'
+          if ('${{ matrix.archive }}'.EndsWith('.zip')) {
+            Compress-Archive -LiteralPath 'dist/${{ matrix.output }}' -DestinationPath $archive -Force
+          } else {
+            tar -czf $archive -C dist '${{ matrix.output }}'
+          }
+
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.output }}
-          path: dist/*
+          name: ${{ matrix.archive }}
+          path: release-assets/${{ matrix.archive }}
           if-no-files-found: error
 
   github-release:
