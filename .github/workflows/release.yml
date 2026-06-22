@@ -54,7 +54,9 @@ jobs:
         shell: pwsh
         env:
           CGO_ENABLED: '0'
-        run: New-Item -ItemType Directory -Force -Path dist | Out-Null; go build -trimpath -ldflags '-s -w' -o 'dist/${{ matrix.output }}' ./cmd/mihomo-st
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          go build -v -tags with_gvisor -trimpath -ldflags '-extldflags -static -w -s -buildid=' -o 'dist/${{ matrix.output }}' ./cmd/mihomo-st
 
       - name: Package
         shell: pwsh
