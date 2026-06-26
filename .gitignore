@@ -1,1 +1,3 @@
-dist/
+.turbo
+dist
+node_modules

@@ -1,0 +1,6 @@
+{
+  "name": "@publinx/mihomo-st-cli",
+  "scripts": {
+    "dev": "go run ./cmd/mihomo-st"
+  }
+}
