@@ -42,8 +42,8 @@ func TestRunWithServeRejectsRemovedFlagsAndInvalidListenAddress(t *testing.T) {
 		args     []string
 		contains string
 	}{
-		{name: "single dash long flag", args: []string{"-config", "nodes.yaml"}, contains: "single-dash"},
-		{name: "removed config flag", args: []string{"--config", "nodes.yaml"}, contains: "unknown flag"},
+		{name: "single dash long flag", args: []string{"-config", "proxies.yaml"}, contains: "single-dash"},
+		{name: "removed config flag", args: []string{"--config", "proxies.yaml"}, contains: "unknown flag"},
 		{name: "removed delay timeout flag", args: []string{"--delay-timeout", "1000"}, contains: "unknown flag"},
 		{name: "port without host", args: []string{"--listen", ":32198"}, contains: "invalid listen address"},
 	}

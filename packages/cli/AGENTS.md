@@ -2,7 +2,7 @@
 
 ## Role
 
-This repository is a Go CLI and REST API for testing mihomo proxy nodes. It reads
+This repository is a Go CLI and REST API for testing mihomo proxies. It reads
 only top-level `proxies` from mihomo-compatible YAML configs.
 
 Keep the project narrow. Do not turn it into a full mihomo runtime: no proxy

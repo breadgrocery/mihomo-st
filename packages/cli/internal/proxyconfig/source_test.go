@@ -42,7 +42,7 @@ func TestLoadTextPropagatesYAMLErrors(t *testing.T) {
 
 func TestLoadLocalReadsFilesystemConfigAndReportsReadErrors(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "nodes.yaml")
+	path := filepath.Join(dir, "proxies.yaml")
 	if err := os.WriteFile(path, []byte(configYAML("local-node")), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -194,8 +194,8 @@ func TestRemoteURLClassifierAcceptsOnlyHTTPWithHost(t *testing.T) {
 		"https://example.test/config.yaml": true,
 		"ftp://example.test/config.yaml":   false,
 		"https:///config.yaml":             false,
-		"C:\\nodes.yaml":                   false,
-		"./nodes.yaml":                     false,
+		"C:\\proxies.yaml":                 false,
+		"./proxies.yaml":                   false,
 		"":                                 false,
 	}
 	for input, want := range cases {

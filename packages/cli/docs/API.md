@@ -149,7 +149,7 @@ Request:
 ```json
 {
   "type": "local",
-  "payload": "configs/nodes.yaml",
+  "payload": "configs/proxies.yaml",
   "mode": "replace",
   "proxy-server": {
     "expand": true,
@@ -181,7 +181,7 @@ Remote import with custom HTTP fields:
 ```json
 {
   "type": "remote",
-  "payload": "https://example.com/nodes.yaml",
+  "payload": "https://example.com/proxies.yaml",
   "headers": {
     "Authorization": "Bearer token",
     "User-Agent": "custom-agent"

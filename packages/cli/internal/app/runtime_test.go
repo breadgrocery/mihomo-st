@@ -237,7 +237,7 @@ func TestRuntimeImportSerializesConcurrentRequestsAndAppendUsesLatestSnapshot(t 
 
 func TestRuntimeLocalAndRemoteImportOptions(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "nodes.yaml"), []byte(proxyYAML("local", "local.example")), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "proxies.yaml"), []byte(proxyYAML("local", "local.example")), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	rt := makeRuntime(t, config.Default(), nil)
@@ -245,7 +245,7 @@ func TestRuntimeLocalAndRemoteImportOptions(t *testing.T) {
 
 	local, err := rt.ImportProxies(context.Background(), ProxyImportCommand{
 		Type:    SourceLocal,
-		Payload: "nodes.yaml",
+		Payload: "proxies.yaml",
 		Headers: map[string]string{"Authorization": "ignored"},
 	})
 	if err != nil {

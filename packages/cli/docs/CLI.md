@@ -28,7 +28,7 @@ mihomo-st -l 127.0.0.1:32198
 | `--version` | `-v`  | `false`           | Print only the version number and exit.                                                               |
 
 The process always starts with built-in default runtime config. Change runtime
-config through the REST API `PATCH /config`; import proxy nodes through
+config through the REST API `PATCH /config`; import proxies through
 `POST /proxies/import`.
 
 The global runtime config field `skip-cert-verify` defaults to `false`. Patch it
