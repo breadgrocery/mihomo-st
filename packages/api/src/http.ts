@@ -5,9 +5,10 @@ export interface HttpOptions {
   timeout?: number;
 }
 
-export const createHttp = (options: HttpOptions) => {
+export const createHttp = (options?: HttpOptions) => {
   const instance = axios.create({
-    baseURL: options.baseURL || "http://127.0.0.1:32198"
+    baseURL: options?.baseURL || "http://127.0.0.1:32198",
+    timeout: options?.timeout
   });
   return instance;
 };

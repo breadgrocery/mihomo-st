@@ -4,12 +4,12 @@ import { createDigestApi } from "./resources/digest";
 import { createProxiesApi } from "./resources/proxies";
 import { createVersionApi } from "./resources/version";
 
-export const createApiClient = (options: HttpOptions) => {
+export const createApiClient = (options?: HttpOptions) => {
   const http = createHttp(options);
   return {
-    version: createVersionApi(http),
-    digest: createDigestApi(http),
     config: createConfigApi(http),
-    proxies: createProxiesApi(http)
+    digest: createDigestApi(http),
+    proxies: createProxiesApi(http),
+    version: createVersionApi(http)
   };
 };
